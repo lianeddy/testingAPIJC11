@@ -3,7 +3,7 @@ const db = mysql.createConnection({
     host: 'localhost',
     user: 'lianeddy',
     password: 'asd123',
-    database: 'contoh',
+    database: 'db_example',
     port: 3306,
     multipleStatements: true
 });
