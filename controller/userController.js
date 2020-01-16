@@ -64,5 +64,38 @@ module.exports = {
                 res.status(200).send(results)
             });
         })
+    },
+    changePass : (req,res) => {
+        const {username, password, newPass} = req.body;
+        // const { id } = req.params;
+        
+        let sql = `select * from users where username = '${username}' and password = '${password}';`;
+        db.query(sql, (err, resultsGet) => {
+            if(err) res.send(err).status(500)
+            console.log(resultsGet, 'get')
+
+            if(resultsGet && resultsGet.length !== 0){
+                let sqledit = `update users set password = '${newPass}' where id = ${resultsGet[0].id};`;
+
+                db.query(sqledit, (err,resultsUpdate) => {
+                    console.log(resultsUpdate, 'update')
+                    if(err) res.send(err).status(500)
+
+                    let sql =`select * from users where id =${resultsGet[0].id}`;
+                    db.query(sql, (err, resultsNewData) => {
+                        if(err) res.status(500).send(err)
+                    
+                        res.status(200).send(resultsNewData)
+                        console.log(resultsGet, 'newDataGet')
+                    
+                    })
+
+                })
+            }else{
+                res.send({
+                    error: 'Invalid Password'
+                }).status(200)
+            }
+        })
     }
 }
