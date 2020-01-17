@@ -1,4 +1,5 @@
 const db = require('../database');
+const { createJWTToken } = require('../helper/jwt');
 
 module.exports = {
     getUsers : (req,res) => {
@@ -21,6 +22,27 @@ module.exports = {
 
         })
     },
+    login : (req,res) => {
+        const { username, password } = req.body;
+        let sql = `select * from users where username = '${username}' and password = '${password}';`;
+
+        db.query(sql, (err, results) => {
+            if(err) res.status(500).send(err);
+
+            let { id, username, password, email, address } = results[0]
+            // const token = createJWTToken({
+            //     id,
+            //     username    
+            // })
+            return res.status(200).send({
+                id,
+                username, 
+                password, 
+                // email,
+                // token
+            })
+        })
+    },
     deleteUser : (req,res) => {
         console.log(req.params.id)
         let sqldelete = `delete from users where id =${req.params.id};`;
@@ -41,7 +63,8 @@ module.exports = {
         console.log(req.body)
         let sqlinsert = `insert into users set ?`
         db.query(sqlinsert, req.body, (err,results) => {
-            let sql = `SELECT * FROM users;`
+            console.log(results)
+            let sql = `SELECT * FROM users where id = ${results.insertId};`
             db.query(sql, (err, results) => {
                 if(err){
                     res.status(500).send(err)
