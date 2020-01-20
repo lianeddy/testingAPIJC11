@@ -46,5 +46,15 @@ module.exports = {
             }
             res.status(200).send(results)
         });
+    },
+    deleteImage : (req,res) => {
+        console.log(req.query)
+        let sql =  `delete from images where id =${req.query.id} and imagepath='${req.query.imagepath}';`
+        db.query(sql, (err, results) => {
+            if(err) res.send(err)
+
+            fs.unlinkSync('./public' + req.query.imagepath)
+            
+        })
     }
 }
