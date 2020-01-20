@@ -1,5 +1,7 @@
-const userRouter = require('./userRouter')
+const userRouter = require('./userRouter');
+const imageRouter = require('./imageRouter');
 
 module.exports = {
-    userRouter
+    userRouter,
+    imageRouter
 }

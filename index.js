@@ -14,8 +14,9 @@ app.get('/', (req,res) => {
     res.status(200).send('<h1>My API</h1>')
 })
 
-const { userRouter } = require('./router')
+const { userRouter, imageRouter } = require('./router')
 
 app.use('/users', userRouter)
+app.use('/image', imageRouter)
 
 app.listen(2001, () => console.log(2001))

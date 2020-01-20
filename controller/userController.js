@@ -134,6 +134,7 @@ module.exports = {
         })
     },
     keepLogin : (req,res) => {
+        console.log('masuk')
         console.log(req.user);
         let sql = `select * from users where id = ${req.user.id};`;
         db.query(sql, (err,results) => {
