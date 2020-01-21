@@ -1,5 +1,7 @@
 const db = require('../database');
 const { createJWTToken } = require('../helper/jwt');
+const Crypto = require('crypto');
+const transporter = require('../helper/nodemailer')
 
 module.exports = {
     getUsers : (req,res) => {
@@ -68,21 +70,60 @@ module.exports = {
                     res.status(500).send(err)
                 }
                 res.status(200).send(results)
+                
             });
         })
     },
     register : (req,res) => {
-        console.log(req.body)
-        let sqlinsert = `insert into users set ?`
-        db.query(sqlinsert, req.body, (err,results) => {
-            console.log(results)
-            let sql = `SELECT * FROM users where id = ${results.insertId};`
+        let {username, password, email} = req.body;
+
+        let hashPassword = Crypto.createHmac('sha256', 'uniqueKey').update(password).digest('hex')
+
+        let sqlinsert = `insert into users(username, password, email, address, verified) values('${username}', '${hashPassword}', '${email}', null, 0 );`;
+        db.query(sqlinsert, req.body, (err, results)=> {
+            if(err) res.send(err)
+
+            let sql = `SELECT * FROM users where username ='${username}';`
             db.query(sql, (err, results) => {
                 if(err){
                     res.status(500).send(err)
                 }
-                res.status(200).send(results)
+                console.log(results)
+                let verificationLink = `http://localhost:3000/verified?username=${username}&password=${hashPassword}`
+                let mailOptions = {
+                    from : 'Admin <lian.eddy@gmail.com>',
+                    to: 'lian.eddy@gmail.com',
+                    subject: 'Confirmation Email',
+                    html : `
+                    <h3>Halo</h3> \n
+                    <a href='${verificationLink}'>
+                        Click Here to Verify your account
+                    </a>
+                    `
+                }
+                transporter.sendMail(mailOptions, (err,res2) => {
+                    if(err){
+                        console.log(err)
+                        return res.status(500).send({ message : err })
+                    }
+                    console.log('success')
+                    return res.status(200).send(results)
+                })
             });
+        })
+    },
+    emailVerification : (req,res) => {
+        let { username, password } = req.body;
+        let sqlget =  `select * from users where username = '${username}' and password ='${password}';`
+        db.query(sqlget, req.body, (err,results) => {
+            if(err)res.send(err)
+            
+            let sqlupdate = `update users set verified = 1 where username ='${username}';`
+            db.query(sqlupdate, (err, results2) => {
+                if(err) res.send(err)
+
+                return res.send({message: 'success'})
+            })
         })
     },
     editUser: (req,res) => {

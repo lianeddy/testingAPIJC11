@@ -1,6 +1,8 @@
 const { createJWTToken } = require('./helper/jwt')
+const Crypto = require('crypto');
 
-console.log(createJWTToken({
-    username: 'lian',
-    id: 1
-}))
+let password ='123123123'
+
+let hashPassword = Crypto.createHmac("sha256", "uniqueKey").update(password).digest("hex")
+
+console.log(hashPassword.length)
