@@ -75,7 +75,7 @@ module.exports = {
         })
     },
     register : (req,res) => {
-        let {username, password, email} = req.body;
+        var {username, password, email} = req.body;
 
         let hashPassword = Crypto.createHmac('sha256', 'uniqueKey').update(password).digest('hex')
 
@@ -92,7 +92,7 @@ module.exports = {
                 let verificationLink = `http://localhost:3000/verified?username=${username}&password=${hashPassword}`
                 let mailOptions = {
                     from : 'Admin <lian.eddy@gmail.com>',
-                    to: 'lian.eddy@gmail.com',
+                    to: email,
                     subject: 'Confirmation Email',
                     html : `
                     <h3>Halo</h3> \n
@@ -106,8 +106,26 @@ module.exports = {
                         console.log(err)
                         return res.status(500).send({ message : err })
                     }
+                    var {id, username, password, email, address, verified} =results[0]
+                    const token = createJWTToken({
+                        id,
+                        username, 
+                        password,
+                        email,
+                        address    
+                    })
                     console.log('success')
-                    return res.status(200).send(results)
+                    console.log(verified)
+                    
+                    return res.status(200).send({
+                        id,
+                        username,
+                        password,
+                        email,
+                        address,
+                        token,
+                        verified
+                    })
                 })
             });
         })
@@ -125,6 +143,37 @@ module.exports = {
                 return res.send({message: 'success'})
             })
         })
+    },
+    resendVerification : (req,res) => {
+        let {username, email} = req.body;
+        let sql = `SELECT * FROM users where username ='${username}';`
+        db.query(sql, (err, results) => {
+            if(err){
+                res.status(500).send(err)
+            }
+            console.log(results)
+            let { password } = results
+            let verificationLink = `http://localhost:3000/verified?username=${username}&password=${password}`
+            let mailOptions = {
+                from : 'Admin <lian.eddy@gmail.com>',
+                to: email,
+                subject: 'Resend Verification',
+                html : `
+                <h3>Halo</h3> \n
+                <a href='${verificationLink}'>
+                    Click Here to Verify your account
+                </a>
+                `
+            }
+            transporter.sendMail(mailOptions, (err,res2) => {
+                if(err){
+                    console.log(err)
+                    return res.status(500).send({ message : err })
+                }
+                console.log('success')
+                return res.status(200).send({message: 'success'})
+            })
+        });
     },
     editUser: (req,res) => {
         const { username } = req.body;
@@ -181,7 +230,7 @@ module.exports = {
         db.query(sql, (err,results) => {
             if(err) res.status(500).send(err)
 
-            const { id, username, password, email, address } = results[0]
+            const { id, username, password, email, address, verified } = results[0]
             
             const token = createJWTToken({
                 id,
@@ -195,7 +244,8 @@ module.exports = {
                 username, 
                 email, 
                 address,
-                token
+                token,
+                verified
             })
         }) 
     }
